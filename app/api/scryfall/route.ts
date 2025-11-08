@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     
     // Collect cards from all pages (limit to reasonable number to avoid timeout)
     while (nextPage && allCreatures.length < 1000) {
-      const response = await fetch(nextPage)
+      const response: Response = await fetch(nextPage)
       
       if (!response.ok) {
         const errorData = await response.json()

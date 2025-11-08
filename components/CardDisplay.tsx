@@ -34,11 +34,11 @@ function getCardFrameImage(colorIdentity: string): string {
   } else if (uniqueColors.has('B')) {
     return '/cardframes/black.png' // Black
   } else if (uniqueColors.has('R')) {
-    return '/cardframes/mtg_blank_red_card__by_growlydave_d5sco14-fullview.png' // Red
+    return '/cardframes/red.png' // Red
   } else if (uniqueColors.has('G')) {
     return '/cardframes/green.png' // Green
   } else {
-    return '/cardframes/white.jpg' // Colorless - default to white
+    return '/cardframes/colorless.jpg' // Colorless - default to white
   }
 }
 
@@ -85,24 +85,35 @@ export default function CardDisplay({ card }: CardDisplayProps) {
         
         {/* Rules Text */}
         <div className="absolute left-4 right-4 bottom-16" style={{ top: '65%' , left: '10%' }}>
-          <div className="text-sm text-black drop-shadow-md h-full overflow-y-auto leading-relaxed">
+          <div className="text-black drop-shadow-md h-full overflow-y-auto leading-relaxed" style={{ width: '95%' }}>
             {card.rulesText.length > 0 ? (
-              <div className="space-y-1.5">
-                {card.rulesText.map((line, index) => (
-                  <p key={index} className="leading-relaxed">
-                    {line}
-                  </p>
-                ))}
-              </div>
+              (() => {
+                // Calculate font size based on total number of lines
+                // Start at 1rem (16px), decrease by 0.05rem per line
+                // Minimum size of 0.7rem (11.2px)
+                const baseSize = 1.5 // 16px (text-base)
+                const sizeDecrement = 0.6 // 0.8px per line
+                const fontSize = Math.max(baseSize - ((card.rulesText.length - 1) * sizeDecrement), 0.7)
+                
+                return (
+                  <div className="space-y-1.5" style={{ fontSize: `${fontSize}rem` }}>
+                    {card.rulesText.map((line, index) => (
+                      <p key={index} className="leading-relaxed">
+                        {line}
+                      </p>
+                    ))}
+                  </div>
+                )
+              })()
             ) : (
-              <p className="italic opacity-75">No rules text generated</p>
+              <p className="italic opacity-75 text-sm">No rules text generated</p>
             )}
           </div>
         </div>
         
         {/* Power/Toughness */}
-        <div className="absolute bottom-4 right-4">
-          <div className="text-lg font-bold text-black drop-shadow-lg bg-white/60 px-3 py-1.5 rounded border border-black/20">
+        <div className="absolute bottom-4 right-4" style={{ bottom: '5%', right: '10%' }}>
+          <div className="text-3xl font-bold text-black">
             {card.power}/{card.toughness}
           </div>
         </div>
