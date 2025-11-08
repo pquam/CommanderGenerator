@@ -135,21 +135,18 @@ export function generateCard(
   let power = parsed.cmc
   let toughness = parsed.cmc
   
-  // Count mana pips (each color symbol is a pip)
-  const manaPips = parsed.manaCost.replace(/\d+/g, '').split('')
-  
   const selectedRulesText: string[] = []
   const usedOriginalLines = new Set<string>()
   
   // Get source card names for replacement
   const sourceCardNames = cards.map((card) => card.name)
   
-  // For each mana pip, roll 70% chance to add a rules text line
-  manaPips.forEach(() => {
-    if (rulesTextList.length === 0) return
+  // Loop CMC times, roll 70% chance to add a rules text line each iteration
+  for (let i = 0; i < parsed.cmc; i++) {
+    if (rulesTextList.length === 0) break
     
     const roll = Math.random()
-    if (roll < 0.8) {
+    if (roll < 0.7) {
       // Pick a random rules text line
       const randomIndex = Math.floor(Math.random() * rulesTextList.length)
       const selectedLine = rulesTextList[randomIndex]
@@ -173,7 +170,7 @@ export function generateCard(
         }
       }
     }
-  })
+  }
   
   // Extract source cards with URLs
   const sourceCards: SourceCard[] = cards.map((card) => {
