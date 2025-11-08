@@ -13,39 +13,58 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Build the Scryfall query
+    // Build the Scryfall query - use random order instead of name order
     const query = `type:legendary color<=${colorIdentity} (game:paper)`
     const encodedQuery = encodeURIComponent(query)
-    const url = `https://api.scryfall.com/cards/search?as=grid&order=name&q=${encodedQuery}`
-
-    const response = await fetch(url)
     
-    if (!response.ok) {
-      const errorData = await response.json()
-      return NextResponse.json(
-        { error: errorData.details || 'Failed to fetch from Scryfall' },
-        { status: response.status }
-      )
+    // Fetch all pages of results
+    let allCreatures: any[] = []
+    let nextPage: string | null = `https://api.scryfall.com/cards/search?q=${encodedQuery}`
+    
+    // Collect cards from all pages (limit to reasonable number to avoid timeout)
+    while (nextPage && allCreatures.length < 1000) {
+      const response = await fetch(nextPage)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        // If we have some cards, continue with what we have
+        if (allCreatures.length > 0) break
+        return NextResponse.json(
+          { error: errorData.details || 'Failed to fetch from Scryfall' },
+          { status: response.status }
+        )
+      }
+
+      const data = await response.json()
+      
+      // Filter to only legendary creatures
+      const pageCreatures = data.data?.filter((card: any) => 
+        card.type_line?.toLowerCase().includes('legendary') &&
+        card.type_line?.toLowerCase().includes('creature')
+      ) || []
+      
+      allCreatures.push(...pageCreatures)
+      
+      // Check for next page
+      nextPage = data.has_more ? data.next_page : null
     }
 
-    const data = await response.json()
-    
-    // Filter to only legendary creatures and get random sample
-    const creatures = data.data?.filter((card: any) => 
-      card.type_line?.toLowerCase().includes('legendary') &&
-      card.type_line?.toLowerCase().includes('creature')
-    ) || []
-
-    if (creatures.length === 0) {
+    if (allCreatures.length === 0) {
       return NextResponse.json(
         { error: 'No legendary creatures found for this color identity' },
         { status: 404 }
       )
     }
 
+    // Proper Fisher-Yates shuffle
+    const shuffled = [...allCreatures]
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
+
     // Pick x random cards where x = CMC (or all if CMC > available)
-    const numToPick = cmc ? Math.min(parseInt(cmc), creatures.length) : creatures.length
-    const shuffled = [...creatures].sort(() => 0.5 - Math.random())
+    const numToPick = cmc ? Math.min(parseInt(cmc), shuffled.length) : shuffled.length
     const selectedCards = shuffled.slice(0, numToPick)
 
     return NextResponse.json({ cards: selectedCards })

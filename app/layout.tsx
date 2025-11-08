@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Commander Generator',
-  description: 'A modern template webpage built with Next.js and Tailwind CSS',
+  description: 'Generate a new legendary creature card for Magic: The Gathering Commander',
 }
 
 export default function RootLayout({
